@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+    <title>多平台下载器</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-label="多平台下载器">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">↓</span><span>多平台下载器</span></div>
+        <div class="route-band" id="routeBand" aria-label="平台线路状态">
+          <span class="route-chip" data-platform="youtube">YouTube <b>检测中</b></span>
+          <span class="route-chip" data-platform="bilibili">Bilibili <b>检测中</b></span>
+          <span class="route-chip" data-platform="instagram">Instagram <b>检测中</b></span>
+        </div>
+        <button class="icon-button" id="settingsButton" type="button" aria-label="打开设置" aria-expanded="false" aria-controls="settingsDrawer">⚙</button>
+      </header>
+
+      <section class="composer" aria-label="添加下载链接">
+        <div class="url-row">
+          <label class="sr-only" for="urlInput">视频或图片链接</label>
+          <input id="urlInput" type="url" autocomplete="off" spellcheck="false" placeholder="粘贴 YouTube、Bilibili、Instagram 或其他媒体链接" />
+          <button class="primary" id="inspectButton" type="button">检查链接</button>
+        </div>
+        <div class="preview hidden" id="preview" aria-live="polite">
+          <img id="previewCover" alt="" />
+          <div class="preview-copy"><strong id="previewTitle"></strong><span id="previewMeta"></span></div>
+          <button class="primary" id="addButton" type="button">加入列表</button>
+          <button class="quiet-button" id="dismissPreviewButton" type="button" aria-label="关闭预览">×</button>
+        </div>
+
+        <!-- Login Prompt Box -->
+        <div class="login-prompt hidden" id="loginPrompt">
+          <span>⚠️ 该内容需要登录账号后才能获取最高画质或完整媒体</span>
+          <button class="primary" id="promptLoginBtn" type="button" style="min-height:30px;padding:0 12px;font-size:12px">🔑 立即打开网页登录</button>
+        </div>
+
+        <p id="message" class="message" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="tasks-panel" aria-label="下载任务">
+        <div class="section-heading"><div><h1>下载列表</h1><span id="taskCount">0 个任务</span></div><button class="text-button" id="clearButton" type="button">清除已完成</button></div>
+        <div id="taskViewport" class="task-viewport" tabindex="0" aria-label="下载任务列表">
+          <div id="emptyState" class="empty-state"><span class="empty-icon" aria-hidden="true">⇩</span><strong>还没有下载任务</strong><p>检查一个链接后加入列表，最多同时下载 3 项。</p></div>
+          <div id="taskList" class="task-list"></div>
+        </div>
+      </section>
+
+      <footer class="actionbar">
+        <span id="footerStatus" class="footer-status">等待新的下载任务</span>
+        <div class="footer-actions">
+          <button class="secondary" id="stopAllButton" type="button">全部停止</button>
+          <button class="secondary" id="openOutputButton" type="button">打开下载目录</button>
+        </div>
+      </footer>
+    </main>
+
+    <aside class="drawer" id="settingsDrawer" aria-label="下载和线路设置" aria-hidden="true">
+      <div class="drawer-header"><div><span class="eyebrow">设置</span><h2>下载选项</h2></div><button class="icon-button" id="closeSettingsButton" type="button" aria-label="关闭设置">×</button></div>
+      <form id="settingsForm" class="settings-form">
+        <!-- Download Directory Picker -->
+        <div class="dir-setting-group">
+          <label>文件保存位置</label>
+          <div class="dir-picker-row">
+            <input id="downloadDirInput" name="download_dir" type="text" placeholder="默认：桌面\视频下载器\下载内容" readonly />
+            <button class="secondary" id="selectDirButton" type="button">选择位置</button>
+            <button class="quiet-button" id="resetDirButton" type="button" title="恢复默认下载位置">↺</button>
+          </div>
+        </div>
+
+        <label>下载类型<select id="modeSelect" name="mode"><option value="video">视频 MP4</option><option value="audio">音频 MP3</option><option value="images">图片</option></select></label>
+        
+        <label>下载清晰度
+          <select id="qualitySelect" name="quality">
+            <option value="best">🌟 最佳画质 (4K / 2K / 1080P60 自动最高)</option>
+            <option value="4320">8K 超高清 (4320P)</option>
+            <option value="2160">4K 超清 (2160P - 需B站大会员)</option>
+            <option value="1440">2K 高清 (1440P - 需B站大会员)</option>
+            <option value="1080">1080P 全高清 (需登录B站)</option>
+            <option value="720">720P 高清</option>
+            <option value="480">480P 标清</option>
+          </select>
+        </label>
+
+        <label>网络线路<select id="proxyModeSelect" name="proxy_mode"><option value="auto">自动选择</option><option value="system">系统代理</option><option value="manual">手动代理</option><option value="direct">直连</option></select></label>
+        <label id="manualProxyField" class="hidden">手动代理<input id="manualProxyInput" name="manual_proxy" type="text" autocomplete="off" placeholder="http://127.0.0.1:7890" /></label>
+        
+        <div class="toggle-row">
+          <label><input id="subtitleToggle" name="subtitles" type="checkbox" /> 下载字幕</label>
+          <label><input id="coverToggle" name="cover" type="checkbox" /> 下载封面</label>
+          <label><input id="autoUpdateToggle" name="auto_update_tools" type="checkbox" /> 启动时自动更新核心</label>
+        </div>
+
+        <!-- Platform Cookie Capture Group -->
+        <div class="tools-box">
+          <div class="tools-title">
+            <span>🍪 账号登录与高画质凭证</span>
+            <button class="secondary" id="openCookieButton" type="button" style="min-height:24px;padding:0 8px;font-size:11px">📂 查看Cookie</button>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="primary" id="loginCaptureBilibiliBtn" type="button" style="min-height:28px;padding:0 10px;font-size:11px">📺 登录B站 (解锁4K/1080P60)</button>
+            <button class="secondary" id="loginCaptureInstagramBtn" type="button" style="min-height:28px;padding:0 10px;font-size:11px">📷 登录Instagram</button>
+            <button class="secondary" id="loginCaptureYouTubeBtn" type="button" style="min-height:28px;padding:0 8px;font-size:11px">🎬 登录YouTube</button>
+          </div>
+          <div class="tools-tip">💡 登录后即可自动获取高画质 Cookie 并在下载时自动合并输出 4K/2K/1080P60 超清视频。</div>
+        </div>
+
+        <!-- Tools Component Status -->
+        <div class="tools-box">
+          <div class="tools-title">
+            <span>🛠️ 下载核心组件</span>
+            <button class="secondary" id="updateToolsButton" type="button" style="min-height:26px;padding:0 8px;font-size:11px">立即检查更新</button>
+          </div>
+          <div class="tools-list" id="toolsList">
+            <div>yt-dlp: <span id="vYtDlp">检测中...</span></div>
+            <div>gallery-dl: <span id="vGalleryDl">检测中...</span></div>
+            <div>FFmpeg: <span id="vFfmpeg">检测中...</span></div>
+          </div>
+          <div class="tools-tip" id="toolsTip">核心组件保障各网站正常解析与下载</div>
+        </div>
+
+        <div class="drawer-actions"><button class="secondary" id="refreshNetworkButton" type="button">测速线路</button><button class="primary" type="submit">保存设置</button></div>
+      </form>
+      <p class="drawer-note">支持多平台登录解锁 4K 高画质；支持清华镜像高速更新核心组件。</p>
+    </aside>
+    <div id="scrim" class="scrim hidden" aria-hidden="true"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>

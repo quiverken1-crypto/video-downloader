@@ -1,0 +1,8 @@
+web/cookies.txt
+web/downloads/
+web/thumbnails/
+web/work/
+web/.deps_ok
+__pycache__/
+*.pyc
+cookies.txt

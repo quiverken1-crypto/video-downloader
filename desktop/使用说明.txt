@@ -1,0 +1,11 @@
+多平台视频下载器（桌面版，Windows 64 位）
+
+1. 解压后双击「多平台视频下载器.exe」，不需要安装。
+2. 粘贴 B站 / YouTube / Instagram 链接，读取标题和封面后加入下载列表。
+3. 最多同时下载 3 项，其余自动排队。
+4. 文件保存在：桌面\视频下载器\下载内容（设置环境变量 VIDEO_DOWNLOADER_HOME 可改位置）。
+5. 需要登录才能下载的高画质内容，在软件里点「登录平台」获取 Cookie，Cookie 只保存在你自己电脑的 桌面\视频下载器\Cookie 里。
+6. 默认使用系统代理（例如 Clash 开启系统代理后即可访问 YouTube / Instagram）。
+7. 本机接口：http://127.0.0.1:17896（供脚本调用，可忽略）。
+
+内置工具：yt-dlp、gallery-dl、FFmpeg。软件会按设置自动更新 yt-dlp / gallery-dl。
